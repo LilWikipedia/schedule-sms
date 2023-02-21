@@ -8,8 +8,11 @@ Dependencies:
 Install the following Python packages using pip:
 
   pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+  
   pip install pytz
+  
   pip install requests
+  
   pip install python-dotenv
 
 These packages are required for the Google Calendar API and the Textlocal API.
