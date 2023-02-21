@@ -1,0 +1,56 @@
+import requests
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from datetime import datetime, time, timedelta
+
+# Google Calendar API credentials (replace with your own values)
+creds = Credentials.from_authorized_user_file('credentials.json', ['https://www.googleapis.com/auth/calendar'])
+
+# Textlocal API credentials (replace with your own values)
+api_key = 'YOUR_API_KEY'
+sender = 'SENDER_NAME'
+
+# Create a Google Calendar event
+event_service = build('calendar', 'v3', credentials=creds)
+event = {
+    'summary': 'Scheduled SMS message',
+    'description': 'This is a scheduled SMS message',
+    'start': {
+        'dateTime': '2023-03-01T10:00:00+05:30',
+        'timeZone': 'Asia/Kolkata',
+    },
+    'end': {
+        'dateTime': '2023-03-01T10:30:00+05:30',
+        'timeZone': 'Asia/Kolkata',
+    },
+}
+event = event_service.events().insert(calendarId='primary', body=event).execute()
+
+# Get the event start time
+event_start = event['start'].get('dateTime', event['start'].get('date'))
+
+# Convert the start time to a Python datetime object
+event_start = datetime.fromisoformat(event_start)
+
+# Calculate the time difference between now and the event start time
+delta = event_start - datetime.now()
+
+# Schedule an SMS message using the Textlocal API
+url = 'https://api.textlocal.in/send'
+numbers = 'MOBILE_NUMBER'
+message = 'Hello, this is a scheduled SMS message!'
+
+payload = {
+    'apikey': api_key,
+    'sender': sender,
+    'numbers': numbers,
+    'message': message,
+    'schedule_time': (event_start - timedelta(minutes=5)).strftime('%Y-%m-%d %H:%M:%S')
+}
+
+response = requests.post(url, data=payload)
+
+if response.status_code == 200 and 'errors' not in response.json():
+    print('SMS message scheduled successfully!')
+else:
+    print('Error scheduling SMS message:', response.text)
