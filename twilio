@@ -1,0 +1,51 @@
+import datetime
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
+from twilio.rest import Client
+
+Google Calendar API setup
+SCOPES = ['https://www.googleapis.com/auth/calendar']
+SERVICE_ACCOUNT_FILE = '/path/to/your/service_account.json'
+CALENDAR_ID = 'primary' # use 'primary' for the primary calendar
+
+creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+service = build('calendar', 'v3', credentials=creds)
+
+Twilio API setup
+TWILIO_ACCOUNT_SID = 'your_account_sid'
+TWILIO_AUTH_TOKEN = 'your_auth_token'
+TWILIO_PHONE_NUMBER = 'your_twilio_phone_number'
+RECIPIENT_PHONE_NUMBER = 'recipient_phone_number'
+
+client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+Get the scheduled date and time from the user
+scheduled_time_str = input('Enter the scheduled date and time (in YYYY-MM-DD HH:MM format): ')
+scheduled_time = datetime.datetime.strptime(scheduled_time_str, '%Y-%m-%d %H:%M')
+
+Create a Google Calendar event for the scheduled time
+event = {
+'summary': 'Scheduled event',
+'start': {
+'dateTime': scheduled_time.isoformat(),
+'timeZone': 'YOUR_TIMEZONE',
+},
+'end': {
+'dateTime': scheduled_time.isoformat(),
+'timeZone': 'YOUR_TIMEZONE',
+},
+}
+
+created_event = service.events().insert(calendarId=CALENDAR_ID, body=event).execute()
+event_id = created_event['id']
+
+Send an SMS message to the recipient with the scheduled time
+message = client.messages.create(
+body=f'The event is scheduled for {scheduled_time_str}',
+from_=TWILIO_PHONE_NUMBER,
+to=RECIPIENT_PHONE_NUMBER
+)
+
+print(f'Event created: {created_event.get("htmlLink")}')
+print(f'SMS message sent: {message.sid}')
+
